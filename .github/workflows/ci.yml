@@ -1,0 +1,29 @@
+name: Build and test
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test models and local request validation
+        run: bash scripts/test.sh
+      - name: Build universal application
+        if: matrix.runner == 'macos-15'
+        run: bash scripts/build.sh
+      - name: Package
+        if: matrix.runner == 'macos-15'
+        run: bash scripts/package.sh
+      - uses: actions/upload-artifact@v4
+        if: matrix.runner == 'macos-15'
+        with:
+          name: WorkBuddy-Credits-universal
+          path: dist/*
+          if-no-files-found: error

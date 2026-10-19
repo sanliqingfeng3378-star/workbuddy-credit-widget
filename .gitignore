@@ -1,0 +1,13 @@
+build/
+.DS_Store
+dist/
+research/
+__pycache__/
+*.pyc
+.env
+.env.*
+*.p12
+*.p8
+*.mobileprovision
+snapshot.json
+live-credits.png
