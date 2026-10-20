@@ -11,11 +11,14 @@ final class CreditMonitor: NSObject, ObservableObject, WKNavigationDelegate, WKU
     @Published var websiteError: String?
     let webView: WKWebView
     private var timer: Timer?
+    private var lastAttempt: Date?
+    private let preferences: AppPreferences
     private var loginWindow: NSWindow?
     private var accountID: String?
     private let bridge = CreditBridge()
 
-    override init() {
+    init(preferences: AppPreferences) {
+        self.preferences = preferences
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .default()
         webView = WKWebView(frame: .zero, configuration: config)
@@ -29,13 +32,16 @@ final class CreditMonitor: NSObject, ObservableObject, WKNavigationDelegate, WKU
         timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
-                if self.payload.message != nil || Date().timeIntervalSince(self.payload.snapshot?.updatedAt ?? .distantPast) >= 300 {
+                if RefreshPolicy.isDue(enabled: self.preferences.automaticRefresh, minutes: self.preferences.refreshMinutes, lastAttempt: self.lastAttempt, now: Date()) {
                     await self.refresh()
                 }
             }
         }
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in await self?.refresh() }
+            Task { @MainActor in
+                guard let self, self.preferences.refreshOnWake else { return }
+                await self.refresh()
+            }
         }
     }
 
@@ -72,6 +78,7 @@ final class CreditMonitor: NSObject, ObservableObject, WKNavigationDelegate, WKU
 
     func refresh() async {
         guard !busy else { return }
+        lastAttempt = Date()
         guard browserReady, webView.url?.host == "www.workbuddy.cn" else {
             payload.message = "请先打开官网登录 WorkBuddy"
             publish()

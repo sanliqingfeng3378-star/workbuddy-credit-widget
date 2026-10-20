@@ -13,7 +13,7 @@ base = dict(CFBundleDevelopmentRegion='zh_CN', CFBundleShortVersionString=versio
                 'NSExceptionDomains': {'127.0.0.1': {'NSExceptionAllowsInsecureHTTPLoads': True}}})
 host = dict(base, CFBundleIdentifier=bundle_id, CFBundleName='WorkBuddy 积分',
             CFBundleDisplayName='WorkBuddy 积分', CFBundleExecutable='WorkBuddyCredits', CFBundlePackageType='APPL',
-            NSPrincipalClass='NSApplication', NSHighResolutionCapable=True,
+            NSPrincipalClass='NSApplication', NSHighResolutionCapable=True, LSUIElement=True,
             CFBundleURLTypes=[{'CFBundleURLName': 'WorkBuddy Credits', 'CFBundleURLSchemes': ['workbuddycredits']}])
 widget = dict(base, CFBundleIdentifier=bundle_id + '.Widget', CFBundleName='WorkBuddy 积分',
               CFBundleDisplayName='WorkBuddy 积分', CFBundleExecutable='WorkBuddyCreditsWidget', CFBundlePackageType='XPC!',

@@ -3,22 +3,38 @@ import AppKit
 
 @main
 struct WorkBuddyCreditApp: App {
-    @StateObject private var monitor = CreditMonitor()
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @StateObject private var preferences: AppPreferences
+    @StateObject private var monitor: CreditMonitor
+    @StateObject private var loginItem = LoginItemManager()
+    init() {
+        let preferences = AppPreferences()
+        _preferences = StateObject(wrappedValue: preferences)
+        _monitor = StateObject(wrappedValue: CreditMonitor(preferences: preferences))
+    }
     var body: some Scene {
         WindowGroup("WorkBuddy 积分监测", id: "dashboard") {
-            Dashboard(monitor: monitor)
-                .onOpenURL { _ in NSApp.activate(ignoringOtherApps: true) }
+            Dashboard(monitor: monitor, preferences: preferences)
+                .background(StartupWindowVisibility(showOnLaunch: preferences.showDashboardOnLaunch))
+                .onOpenURL { _ in
+                    LaunchPresentation.shared.explicitOpen()
+                    NSApp.windows.first(where: { $0.identifier?.rawValue == "WorkBuddyDashboard" })?.makeKeyAndOrderFront(nil)
+                    NSApp.activate(ignoringOtherApps: true)
+                }
         }.defaultSize(width: 780, height: 520).windowResizability(.contentSize)
         MenuBarExtra {
             MenuContent(monitor: monitor)
         } label: {
-            Label("WB \(CreditFormat.remaining(monitor.payload.snapshot))", systemImage: "sparkle")
+            Label(preferences.showMenuBarBalance ? "WB \(CreditFormat.remaining(monitor.payload.snapshot))" : "WB", systemImage: "sparkle")
         }.menuBarExtraStyle(.window)
+        Settings { SettingsView(preferences: preferences, loginItem: loginItem, monitor: monitor) }
+            .windowResizability(.contentSize)
     }
 }
 
 struct Dashboard: View {
     @ObservedObject var monitor: CreditMonitor
+    @ObservedObject var preferences: AppPreferences
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
             HStack {
@@ -27,7 +43,7 @@ struct Dashboard: View {
                     Text("把剩余积分，放在桌面上。").foregroundStyle(.secondary)
                 }
                 Spacer()
-                Image(systemName: "sparkle").font(.system(size: 36)).foregroundStyle(.green)
+                OpenSettingsButton().buttonStyle(.borderless)
             }
             HStack(spacing: 20) {
                 VStack(alignment: .leading, spacing: 9) {
@@ -45,12 +61,12 @@ struct Dashboard: View {
                     Label(monitor.busy ? "正在同步…" : "立即刷新", systemImage: "arrow.clockwise")
                 }.disabled(monitor.busy)
                 Spacer()
-                Text("每 5 分钟查询").font(.caption).foregroundStyle(.secondary)
+                Text(preferences.refreshSummary).font(.caption).foregroundStyle(.secondary)
             }
             if let message = monitor.payload.message {
                 Label(message, systemImage: "info.circle").font(.callout).foregroundStyle(.orange)
             } else {
-                Label("已连接 · 关闭窗口后仍会通过菜单栏自动同步", systemImage: "checkmark.circle.fill").font(.callout).foregroundStyle(.green)
+                Label(preferences.automaticRefresh ? "已连接 · 关闭窗口后仍会通过菜单栏自动同步" : "已连接 · 定时刷新已暂停，可手动刷新", systemImage: "checkmark.circle.fill").font(.callout).foregroundStyle(.green)
             }
             Divider()
             VStack(alignment: .leading, spacing: 7) {
@@ -72,7 +88,8 @@ struct MenuContent: View {
             HStack {
                 Button("刷新") { Task { await monitor.refresh() } }.disabled(monitor.busy)
                 Button("登录", action: monitor.showLogin)
-                Button("打开面板") { openWindow(id: "dashboard"); NSApp.activate(ignoringOtherApps: true) }
+                Button("打开面板") { LaunchPresentation.shared.explicitOpen(); openWindow(id: "dashboard"); NSApp.activate(ignoringOtherApps: true) }
+                OpenSettingsButton()
                 Spacer()
                 Button("退出") { NSApp.terminate(nil) }
             }.buttonStyle(.borderless).font(.caption)

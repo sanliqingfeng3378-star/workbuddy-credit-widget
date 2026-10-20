@@ -12,7 +12,7 @@ Requires macOS 14+ on Apple silicon or Intel. Download the universal ZIP from [R
 
 Open the app, select “打开官网登录” to log in through the official website, then “立即刷新” to refresh. Add “WorkBuddy 积分” from the macOS desktop widget gallery. Keep the menu bar app running; closing its main window is fine.
 
-The host queries about every five minutes while running. Widget refreshes are scheduled by macOS and may be delayed. Used/total credits are the website's current resource totals, not daily or monthly spending. Credits are not currency.
+Open Settings from the menu bar, dashboard, or `⌘,` to configure launch at login, initial dashboard visibility, menu bar balance, automatic refresh (1/5/10/15 minutes), and refresh on wake. Login-item status comes from macOS; it is not enabled automatically. Preferences persist locally. The host queries every five minutes by default while running; scheduled retries use the selected interval. Widget refreshes are scheduled by macOS and may be delayed. Used/total credits are the website's current resource totals, not daily or monthly spending. Credits are not currency.
 
 ## Privacy and limitations
 
