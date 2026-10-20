@@ -40,8 +40,8 @@ codesign "${sign_flags[@]}" --entitlements Resources/Widget.entitlements "$exten
 codesign "${sign_flags[@]}" "$app"
 codesign --verify --deep --strict "$app"
 for arch in "${architectures[@]}"; do
-  xcrun lipo -verify_arch "$arch" "$app/Contents/MacOS/WorkBuddyCredits"
-  xcrun lipo -verify_arch "$arch" "$extension/Contents/MacOS/WorkBuddyCreditsWidget"
+  xcrun lipo "$app/Contents/MacOS/WorkBuddyCredits" -verify_arch "$arch"
+  xcrun lipo "$extension/Contents/MacOS/WorkBuddyCreditsWidget" -verify_arch "$arch"
 done
 output="$PWD/build/$target/WorkBuddy Credits.app"
 mkdir -p "$(dirname "$output")"
