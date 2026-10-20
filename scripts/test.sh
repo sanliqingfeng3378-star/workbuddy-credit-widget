@@ -8,3 +8,5 @@ swiftc -parse-as-library -module-cache-path build/ModuleCache Shared/CreditModel
 python3 Tests/bridge_integration.py
 swiftc -parse-as-library -module-cache-path build/ModuleCache Shared/RefreshPolicy.swift App/AppPreferences.swift App/LoginItemManager.swift Tests/SettingsTests.swift -o build/settings-tests
 build/settings-tests
+swiftc -parse-as-library -module-cache-path build/ModuleCache App/WidgetRepair.swift Tests/WidgetRepairTests.swift -o build/widget-repair-tests
+build/widget-repair-tests

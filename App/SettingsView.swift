@@ -5,6 +5,7 @@ struct SettingsView: View {
     @ObservedObject var preferences: AppPreferences
     @ObservedObject var loginItem: LoginItemManager
     @ObservedObject var monitor: CreditMonitor
+    @ObservedObject private var widgetRepair = WidgetRepairManager.shared
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 14) {
@@ -53,6 +54,25 @@ struct SettingsView: View {
                 footer: {
                     Text("定时刷新与唤醒刷新可分别设置。启动、登录完成及手动刷新仍会同步。桌面卡片的显示更新由 macOS 调度，可能稍有延迟。")
                         .font(.caption).foregroundStyle(.secondary)
+                }
+                Section {
+                    HStack {
+                        Text("卡片空白或更新后未恢复").foregroundStyle(.secondary)
+                        Spacer()
+                        Button(widgetRepair.busy ? "正在修复…" : "修复桌面显示") {
+                            Task {
+                                await widgetRepair.repair()
+                                await monitor.refresh()
+                            }
+                        }.disabled(widgetRepair.busy)
+                    }
+                    if let message = widgetRepair.message {
+                        Text(message).font(.caption)
+                            .foregroundStyle(widgetRepair.failed ? Color.orange : Color.secondary)
+                    }
+                } header: { Label("桌面卡片", systemImage: "rectangle.on.rectangle") }
+                footer: {
+                    Text("更新后的首次启动会自动重新加载卡片。修复会保留卡片位置和登录状态，显示恢复由 macOS 完成。").font(.caption)
                 }
                 Section {
                     HStack {
@@ -120,6 +140,9 @@ struct StartupWindowVisibility: NSViewRepresentable {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        Task { @MainActor in await WidgetRepairManager.shared.repairAfterUpdate() }
+    }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         LaunchPresentation.shared.explicitOpen()
         if !flag, let dashboard = sender.windows.first(where: { $0.identifier?.rawValue == "WorkBuddyDashboard" }) {

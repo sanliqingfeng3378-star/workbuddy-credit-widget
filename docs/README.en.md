@@ -16,6 +16,8 @@ Open Settings from the menu bar, dashboard, or `⌘,` to configure launch at log
 
 ## Privacy and limitations
 
+The app runs without a Dock icon. After an update, its first launch re-registers and reloads its own widget extension. If a card remains blank, open Settings → 桌面卡片 → 修复桌面显示. This preserves widget placement and login state; macOS controls when the card actually reappears.
+
 Login uses an independent local WebKit session. The app does not read the installed WorkBuddy client's credentials or send passwords/cookies/tokens to the widget. There is no developer-operated server or telemetry. A loopback-only server on `127.0.0.1:38348` shares credit snapshots; other local processes can read them. Cached snapshots may remain visible while offline.
 
 Personal accounts have been tested locally; enterprise parsing is covered by synthetic tests only. Both CPU architectures are included in universal builds, but this does not guarantee runtime validation on every supported OS/device. Do not run multiple copies simultaneously. Users of the early local 1.0.x prototype may need to log in and re-add widgets because the public bundle identifier changed.
